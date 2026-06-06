@@ -28,40 +28,29 @@ def reset():
     displacement_entry.delete(0, tk.END)
     k_entry.delete(0, tk.END)
 
-def update_diagrams(*args):
-    motion = motion_var.get()
+def hide_all():
+    widgets = [
+        angle_label, angle_entry,
+        height_label, height_entry,
+        acceleration_label, acceleration_entry,
+        k_label, k_entry,
+        displacement_label, displacement_entry
+    ]
 
+    for w in widgets:
+        w.place_forget()
+
+def update_diagrams(*args):
+    hide_all()
+    motion = motion_var.get()
+    
     if motion == "Linear Motion":
         diagram_menu["values"] = ["x-t", "v-t"]
-        angle_label.place_forget()
-        angle_entry.place_forget()
-        print("angle")
-        height_label.place_forget()
-        height_entry.place_forget()
-        print("height")
-        acceleration_label.place_forget()
-        acceleration_entry.place_forget()
-        print("acc")
-        k_label.place_forget()
-        k_entry.place_forget()
-        print("k")
-        displacement_label.place_forget()
-        displacement_entry.place_forget()
-        print("A")
-        print("yo")
 
     elif motion == "Accelerated Motion":
         diagram_menu["values"] = ["x-t", "v-t"]
         acceleration_label.place(x=250, y=320, anchor="center")
         acceleration_entry.place(x=250, y=345, anchor="center")
-        angle_label.place_forget()
-        angle_entry.place_forget()
-        height_label.place_forget()
-        height_entry.place_forget()
-        k_label.place_forget()
-        k_entry.place_forget()
-        displacement_label.place_forget()
-        displacement_entry.place_forget()
 
     elif motion == "Projectile Motion":
         diagram_menu["values"] = ["x-t", "y-t", "x-y"]
@@ -69,12 +58,6 @@ def update_diagrams(*args):
         angle_entry.place(x=250, y=345, anchor="center")
         height_label.place(x=250, y=375, anchor="center")
         height_entry.place(x=250, y=400, anchor="center")
-        acceleration_label.place_forget()
-        acceleration_entry.place_forget()
-        k_label.place_forget()
-        k_entry.place_forget()
-        displacement_label.place_forget()
-        displacement_entry.place_forget()
 
     elif motion == "Simple Harmonic Motion":
         diagram_menu["values"] = ["x-t"]
@@ -82,13 +65,6 @@ def update_diagrams(*args):
         k_entry.place(x=250, y=345, anchor="center")
         displacement_label.place(x=250, y=375, anchor="center")
         displacement_entry.place(x=250, y=400, anchor="center")
-        height_label.place_forget()
-        height_entry.place_forget()
-        acceleration_label.place_forget()
-        acceleration_entry.place_forget()
-        angle_label.place_forget()
-        angle_entry.place_forget()
-        
     
     diagram_var.set(diagram_menu["values"][0])
 
@@ -277,7 +253,7 @@ orbit_label = tk.Label(window, text="Select Orbit Animation:")
 orbit_label.place(x=350, y=70, anchor="center")
 orbit_menu = ttk.Combobox(
                             window, textvariable=orbit_var,
-                            values=["Earth"
+                            values=["None","Earth"
                                    ],
                             state="readonly",
                             width=18
