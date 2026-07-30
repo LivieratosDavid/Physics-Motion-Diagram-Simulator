@@ -14,7 +14,7 @@ window.resizable(False, False)
 # ---------------- VARIABLES ----------------
 motion_var = tk.StringVar(value="Linear Motion")
 diagram_var = tk.StringVar(value="x-t")
-orbit_var = tk.StringVar(value="")
+orbit_var = tk.StringVar(value="None")
 
 
 # ---------------- FUNCTIONS ----------------
@@ -48,12 +48,12 @@ def update_diagrams(*args):
         diagram_menu["values"] = ["x-t", "v-t"]
 
     elif motion == "Accelerated Motion":
-        diagram_menu["values"] = ["x-t", "v-t"]
+        diagram_menu["values"] = ["x-t", "v-t", "Kinetic Energy"]
         acceleration_label.place(x=250, y=320, anchor="center")
         acceleration_entry.place(x=250, y=345, anchor="center")
 
     elif motion == "Projectile Motion":
-        diagram_menu["values"] = ["x-t", "y-t", "x-y"]
+        diagram_menu["values"] = ["x-t", "y-t", "x-y", "Kinetic Energy", "Potential Energy"]
         angle_label.place(x=250, y=320, anchor="center")
         angle_entry.place(x=250, y=345, anchor="center")
         height_label.place(x=250, y=375, anchor="center")
@@ -131,12 +131,16 @@ def simulate():
             K_init = 1/2 * m * v0**2
             K_final = 1/2 * m * v[-1]**2
             d_K = K_final - K_init
+            K = v0 + a * t
             U = 0
 
             if diagram == "x-t":
                 y_data, ylabel, title = x, "Distance (m)", "Accelerated Motion: x-t"
-            else:
+            elif diagram == "v-t":
                 y_data, ylabel, title = v, "Velocity (m/s)", "Accelerated Motion: v-t"
+            else: 
+                y_data, ylabel, title = K, "Kinetic Energy (J)", "Accelerated Motion: K-t"
+
 
             plt.figure(figsize=(8, 5))
             plt.plot(t, y_data, color="red", linewidth=3)
@@ -161,6 +165,7 @@ def simulate():
             landing_index = np.where(y == 0)[0]
             if len(landing_index) > 0:
                 cutoff = landing_index[0]
+                t = t[:cutoff]
                 x = x[:cutoff]
                 y = y[:cutoff]
 
@@ -195,6 +200,28 @@ def simulate():
                 plt.figtext(0.02, 0.02, f"ΔK = {d_K:.2f} J", fontsize=9, color="darkred")
                 plt.grid(True)
                 plt.show()
+
+            elif diagram == "Kinetic Energy":
+                vy_t = vy - g * t
+                v_t = np.sqrt(vx**2 + vy_t**2)
+                K = 1/2 * m * v_t**2
+                plt.figure(figsize=(8, 5))
+                plt.plot(t[:len(y)], K, color="red", linewidth=3)
+                plt.title("Projectile Motion: Kinetic Energy")
+                plt.xlabel("Time (s)")
+                plt.ylabel("Kinetic Energy (J)")
+                plt.grid(True)
+                plt.show()   
+
+            elif diagram == "Potential Energy":
+                U = m * g * y 
+                plt.figure(figsize=(8, 5))
+                plt.plot(t[:len(y)], U, color="red", linewidth=3)
+                plt.title("Projectile Motion: Potential Energy")
+                plt.xlabel("Time (s)")
+                plt.ylabel("Potential Energy (J)")
+                plt.grid(True)
+                plt.show()        
 
             else:
                 plt.figure(figsize=(8, 5))
