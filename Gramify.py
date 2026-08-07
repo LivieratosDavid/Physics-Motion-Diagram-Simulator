@@ -1,7 +1,11 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.widgets import *
 import tkinter as tk
+from tkinter import filedialog
 from tkinter import ttk, messagebox
+import pandas as pd
+import os
 import subprocess
 g = 9.81
 
@@ -16,8 +20,43 @@ motion_var = tk.StringVar(value="Linear Motion")
 diagram_var = tk.StringVar(value="x-t")
 orbit_var = tk.StringVar(value="None")
 
+# -------- DATA HANDLING ----------
+data = {}
 
 # ---------------- FUNCTIONS ----------------
+def export_csv():
+
+    if not data:
+        messagebox.showerror("Run a Simulation Before Exporting")
+        return
+    
+    filename = filedialog.asksaveasfilename(
+        title="Export Simulation",
+        defaultextension=".csv",
+        filetypes=[
+            ("CSV files", "*.csv")
+        ]
+    )
+
+    if not filename:
+        return
+
+    headers = list(data.keys())
+    arrays = list(data.values())
+
+    csv_data = np.column_stack(arrays)
+
+    np.savetxt(
+        filename,
+        csv_data,
+        delimiter=",",
+        header=",".join(headers),
+        comments="",
+        fmt="%.6f"
+    )
+
+
+
 def reset():
     time_entry.delete(0, tk.END)
     acceleration_entry.delete(0, tk.END)
@@ -46,7 +85,7 @@ def update_diagrams(*args):
     
     if motion == "Linear Motion":
         diagram_menu["values"] = ["x-t", "v-t"]
-
+        
     elif motion == "Accelerated Motion":
         diagram_menu["values"] = ["x-t", "v-t", "Kinetic Energy"]
         acceleration_label.place(x=250, y=320, anchor="center")
@@ -89,6 +128,7 @@ def update_orbits(*args):
 
 def simulate():
     orbit = orbit_var.get()
+    data.clear()
 
     if orbit == "Earth":
         run_orbit()
@@ -99,7 +139,7 @@ def simulate():
         v0 = float(velocity_entry.get())
         diagram = diagram_var.get()
         m = float(mass_entry.get())
-        t = np.linspace(0, t_max, 200)
+        t = np.linspace(0, t_max, 100)
 
         # ---------------- LINEAR MOTION ----------------
         if motion == "Linear Motion":
@@ -107,6 +147,10 @@ def simulate():
             v = np.full_like(t, v0)
             dK = 0
             U = 0
+
+            data["Time (s)"] = t
+            data["Position (m)"] = x
+            data["Velocity (m/s)"] = v
 
             if diagram == "x-t":
                 y_data, ylabel, title = x, "Distance (m)", "Linear Motion: x-t"
@@ -131,9 +175,14 @@ def simulate():
             K_init = 1/2 * m * v0**2
             K_final = 1/2 * m * v[-1]**2
             d_K = K_final - K_init
-            K = v0 + a * t
+            K = 1/2 * m * v**2
             U = 0
 
+            data["Time (s)"] = t
+            data["Position (m)"] = x
+            data["Velocity (m/s)"] = v
+            data["Kinetic Energy (J)"] = K
+        
             if diagram == "x-t":
                 y_data, ylabel, title = x, "Distance (m)", "Accelerated Motion: x-t"
             elif diagram == "v-t":
@@ -161,6 +210,12 @@ def simulate():
             vy = v0 * np.sin(angle)
             x = vx * t
             y = np.maximum(h0 + vy * t - 0.5 * g * t**2, 0)
+
+            data["Time (s)"] = t
+            data["Position (m)"] = x
+            data["Velocity (m/s)"] = v
+            data["Kinetic Energy (J)"] = K
+            data["Potential Energy (J)"] = U
 
             landing_index = np.where(y == 0)[0]
             if len(landing_index) > 0:
@@ -240,6 +295,10 @@ def simulate():
             A = float(displacement_entry.get())
             omega = np.sqrt(k / m)
             x = A * np.cos(omega * t)
+
+            data["Time (s)"] = t
+            data["Displacement (m)"] = x
+            data["Velocity (m/s)"] = v
 
             plt.figure(figsize=(8, 5))
             plt.plot(t, x, color="red", linewidth=3)
@@ -333,19 +392,47 @@ diagram_menu = ttk.Combobox(window, textvariable=diagram_var,
                             state="readonly")
 diagram_menu.place(x=250, y=465, anchor="center")
 
+# ---------------- BUTTON FRAME ----------------
+
+button_frame = tk.Frame(window)
+button_frame.place(x=250, y=560, anchor="center")
+
+
 # Simulate button
-simulate_button = tk.Button(window, text="Run Simulation",
-                            font=("Arial", 13, "bold"), 
-                            bg="lightblue",
-                            command=simulate)
-simulate_button.place(x=170, y=560, anchor="center")
+simulate_button = tk.Button(
+    button_frame,
+    text="Run Simulation",
+    font=("Arial", 13, "bold"),
+    bg="lightblue",
+    width=12,
+    command=simulate
+)
 
 # Reset button
-reset_button = tk.Button(window, text="Reset",
-                            font=("Arial", 13, "bold"), 
-                            bg="lightblue",
-                            command=reset)
-reset_button.place(x=350, y=560, anchor="center")
+reset_button = tk.Button(
+    button_frame,
+    text="Reset",
+    font=("Arial", 13, "bold"),
+    bg="lightblue",
+    width = 9,
+    command=reset
+)
+
+# Export CSV button
+export_button = tk.Button(
+    button_frame,
+    text="Export CSV",
+    font=("Arial", 13, "bold"),
+    bg="lightblue",
+    width=10,
+    command=export_csv
+)
+
+
+simulate_button.pack(side="left", padx=5)
+reset_button.pack(side="left", padx=5)
+export_button.pack(side="left", padx=5)
+
 # ---------------- START ----------------
 motion_var.trace_add("write", update_diagrams)
 orbit_var.trace_add("write", update_orbits)
