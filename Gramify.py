@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.widgets import *
+from matplotlib.widgets import Button
 import tkinter as tk
 from tkinter import filedialog
 from tkinter import ttk, messagebox
@@ -14,7 +14,7 @@ g = 9.81
 
 window = tk.Tk()
 window.title("Motion Simulator")
-window.geometry("500x600")
+window.geometry("500x700")
 window.resizable(False, False)
 
 # ---------------- VARIABLES ----------------
@@ -28,6 +28,34 @@ orbit_var = tk.StringVar(value="None")
 data = {}
 
 # ---------------- FUNCTIONS ----------------
+
+def clicked_motion(event, photo):
+    win = tk.Toplevel()
+    win.title("Equations Used")
+    win.geometry("350x700")
+
+    img = tk.PhotoImage(file=photo)
+
+    canvas = tk.Canvas(win, width=354, height=700)
+    scrollbar = tk.Scrollbar(win, orient="vertical", command=canvas.yview)
+    canvas.configure(yscrollcommand=scrollbar.set)
+    scrollbar.pack(side="right", fill="y")
+    canvas.pack(side="left", fill="both", expand=True)
+    canvas.create_image(0, 0, anchor="nw", image=img)
+    canvas.configure(scrollregion=canvas.bbox("all"))
+
+    win.photo = img
+
+def clicked_energy(event):
+    win = tk.Toplevel()
+    win.title("Equations Used")
+    win.geometry("226x272")
+
+    photo = tk.PhotoImage(file='energy.png')
+    image = tk.Label(win, image=photo)
+    image.pack()
+
+    image.photo = photo
 
 def export_csv():
 
@@ -60,6 +88,116 @@ def export_csv():
 
     messagebox.showinfo("Export Complete", "Simulation data exported successfully.")
 
+def compare_csv():
+    file1 = filedialog.askopenfilename(
+        title="Select First CSV",
+        filetypes=[("CSV files", "*.csv")]
+    )
+
+    if not file1:
+        return
+
+    file2 = filedialog.askopenfilename(
+        title="Select Second CSV",
+        filetypes=[("CSV files", "*.csv")]
+    )
+
+    if not file2:
+        return
+
+    data1 = pd.read_csv(file1)
+    data2 = pd.read_csv(file2)
+
+    diagrams = {
+        "x-t": ("Time (s)", "Position (m)"),
+        "v-t": ("Time (s)", "Velocity (m/s)"),
+        "K-t": ("Time (s)", "Kinetic Energy (J)"),
+        "U-t": ("Time (s)", "Potential Energy (J)"),
+        "x-y": ("Horizontal Position (m)", "Vertical Position (m)")
+    }
+
+    common_diagrams = []
+
+    for diagram, (x_column, y_column) in diagrams.items():
+
+        if (
+            x_column in data1.columns and
+            y_column in data1.columns and
+            x_column in data2.columns and
+            y_column in data2.columns
+        ):
+            common_diagrams.append(diagram)
+
+    if not common_diagrams:
+        messagebox.showerror(
+            "Comparison Error",
+            "The two CSV files have no diagrams in common."
+        )
+        return
+
+    # ---------------- COMPARISON WINDOW ----------------
+
+    compare_window = tk.Toplevel(window)
+    compare_window.title("Compare Simulations")
+    compare_window.geometry("300x200")
+
+    tk.Label(
+        compare_window,
+        text="Select diagram to compare:",
+        font=("Arial", 12, "bold")
+    ).pack(pady=15)
+
+    diagram_var = tk.StringVar()
+
+    diagram_menu = ttk.Combobox(
+        compare_window,
+        textvariable=diagram_var,
+        values=common_diagrams,
+        state="readonly"
+    )
+
+    diagram_menu.pack(pady=5)
+
+    diagram_menu.current(0)
+
+    # ---------------- PLOT ----------------
+
+    def plot_comparison():
+        diagram = diagram_var.get()
+        x_column, y_column = diagrams[diagram]
+        plt.figure(figsize=(8, 5))
+
+        plt.plot(
+            data1[x_column],
+            data1[y_column],
+            linewidth=3,
+            label="Simulation 1"
+        )
+
+        plt.plot(
+            data2[x_column],
+            data2[y_column],
+            linewidth=3,
+            label="Simulation 2"
+        )
+
+        plt.title(f"Comparison: {diagram}")
+        plt.xlabel(x_column)
+        plt.ylabel(y_column)
+
+        plt.grid(True)
+        plt.legend()
+
+        plt.show()
+
+    # ---------------- BUTTON ----------------
+
+    tk.Button(
+        compare_window,
+        text="Compare",
+        font=("Arial", 12, "bold"),
+        command=plot_comparison
+    ).pack(pady=10)
 
 def reset():
     time_entry.delete(0, tk.END)
@@ -70,7 +208,6 @@ def reset():
     angle_entry.delete(0, tk.END)
     displacement_entry.delete(0, tk.END)
     k_entry.delete(0, tk.END)
-
 
 def hide_all():
     widgets = [
@@ -83,7 +220,6 @@ def hide_all():
 
     for w in widgets:
         w.place_forget()
-
 
 def update_diagrams(*args):
     hide_all()
@@ -118,7 +254,6 @@ def update_diagrams(*args):
         displacement_entry.place(x=250, y=400, anchor="center")
 
     diagram_var.set(diagram_menu["values"][0])
-
 
 def update_orbits(*args):
 
@@ -160,20 +295,31 @@ def linear_motion(t, v0, diagram):
         ylabel = "Velocity (m/s)"
         title = "Linear Motion: v-t"
 
-    plt.figure(figsize=(8, 5))
-    plt.plot(t,y_data,color="red",linewidth=3)
-    plt.title(title)
-    plt.xlabel("Time (s)")
-    plt.ylabel(ylabel)
-    plt.grid(True)
-    plt.figtext(0.15,0.02,f"U = {U} J",fontsize=9,color="red")
-    plt.figtext(0.02,0.02,f"ΔK = {dK} J",fontsize=9,color="darkred")
+    fig, ax = plt.subplots(figsize=(8, 5))
+    fig.subplots_adjust(top=0.80)
+    
+    button_ax = fig.add_axes([0.125, 0.85, 0.2, 0.07])
+    button_ax.set_xticks([])
+    button_ax.set_yticks([])
+
+    button = Button(button_ax, "Show Equations Used")
+
+    ax.plot(t, y_data, color="red", linewidth=3)
+    ax.set_title(title)
+    ax.set_xlabel("Time (s)")
+    ax.set_ylabel(ylabel)
+    ax.grid(True)
+
+    fig.text(0.15, 0.02, f"U = {U} J", fontsize=9, color="red")
+    fig.text(0.02, 0.02, f"ΔK = {dK} J", fontsize=9, color="darkred")
+
+    button.on_clicked(lambda event: clicked_motion(event, 'linear.png'))
+
     plt.show()
 
     return data1
 
 # ---------------- ACCELERATED MOTION ----------------
-
 def accelerated_motion(t, v0, m, a, diagram):
 
     x = v0 * t + 0.5 * a * t**2
@@ -194,30 +340,71 @@ def accelerated_motion(t, v0, m, a, diagram):
     }
 
     if diagram == "x-t":
-        y_data = x
-        ylabel = "Distance (m)"
-        title = "Accelerated Motion: x-t"
+        fig, ax = plt.subplots(figsize=(8, 5))
+        fig.subplots_adjust(top=0.80)
+
+        button_ax = fig.add_axes([0.125, 0.85, 0.2, 0.07])
+        button_ax.set_xticks([])
+        button_ax.set_yticks([])
+        button = Button(button_ax, "Show Equations Used")
+
+        ax.plot(t, x, color="red", linewidth=3)
+        ax.set_title("Accelerated Motion: x-t")
+        ax.set_xlabel("Time (s)")
+        ax.set_ylabel("Distance (m)")
+        ax.grid(True)
+
+        fig.text(0.15, 0.02, f"U = {U} J", fontsize=9, color="red")
+        fig.text(0.02, 0.02, f"ΔK = {d_K:.2f} J", fontsize=9, color="darkred")
+
+        button.on_clicked(lambda event: clicked_motion(event, "acc.png"))
+        plt.show()
+
 
     elif diagram == "v-t":
-        y_data = v
-        ylabel = "Velocity (m/s)"
-        title = "Accelerated Motion: v-t"
+        fig, ax = plt.subplots(figsize=(8, 5))
+        fig.subplots_adjust(top=0.80)
 
-    else:
-        y_data = K
-        ylabel = "Kinetic Energy (J)"
-        title = "Accelerated Motion: K-t"
+        button_ax = fig.add_axes([0.125, 0.85, 0.2, 0.07])
+        button_ax.set_xticks([])
+        button_ax.set_yticks([])
+        button = Button(button_ax, "Show Equations Used")
 
-    plt.figure(figsize=(8, 5))
-    plt.plot(t,y_data,color="red",linewidth=3)
-    plt.title(title)
-    plt.xlabel("Time (s)")
-    plt.ylabel(ylabel)
-    plt.grid(True)
-    plt.figtext(0.15,0.02,f"U = {U} J",fontsize=9,color="red")
-    plt.figtext(0.02,0.02,f"ΔK = {d_K:.2f} J",fontsize=9,color="darkred")
-    plt.show()
+        ax.plot(t, v, color="red", linewidth=3)
+        ax.set_title("Accelerated Motion: v-t")
+        ax.set_xlabel("Time (s)")
+        ax.set_ylabel("Velocity (m/s)")
+        ax.grid(True)
 
+        fig.text(0.15, 0.02, f"U = {U} J", fontsize=9, color="red")
+        fig.text(0.02, 0.02, f"ΔK = {d_K:.2f} J", fontsize=9, color="darkred")
+
+        button.on_clicked(lambda event: clicked_motion(event, "acc.png"))
+        plt.show()
+
+
+    elif diagram == "Kinetic Energy":
+        fig, ax = plt.subplots(figsize=(8, 5))
+        fig.subplots_adjust(top=0.80)
+
+        button_ax = fig.add_axes([0.125, 0.85, 0.2, 0.07])
+        button_ax.set_xticks([])
+        button_ax.set_yticks([])
+        button = Button(button_ax, "Show Equations Used")
+
+        ax.plot(t, K, color="red", linewidth=3)
+        ax.set_title("Accelerated Motion: Kinetic Energy")
+        ax.set_xlabel("Time (s)")
+        ax.set_ylabel("Kinetic Energy (J)")
+        ax.grid(True)
+
+        fig.text(0.15, 0.02, f"U = {U} J", fontsize=9, color="red")
+        fig.text(0.02, 0.02, f"ΔK = {d_K:.2f} J", fontsize=9, color="darkred")
+
+        button.on_clicked(clicked_energy)
+        plt.show()
+
+    
     return data2
 
 # ------- PROJECTILE MOTION -------
@@ -258,56 +445,94 @@ def projectile_motion(t, v0, h0, theta,  m, diagram):
 
 
     data3 = {
-        "Time(s)": t, 
-        "Horizontal Position(m)": x, 
-        "Velocity(m/s)": v_t,
-        "Kinetic Energy(J)": K,
-        "Potential Energy(J)": U
+        "Time (s)": t, 
+        "Horizontal Position (m)": x,
+        "Vertical Position (m)": y,
+        "Velocity (m/s)": v_t,
+        "Kinetic Energy (J)": K,
+        "Potential Energy (J)": U
     }
 
     if diagram == "x-t":
-        plt.figure(figsize=(8, 5))
-        plt.plot(t,x,color="red",linewidth=3)
-        plt.title("Projectile Motion: x-t")
-        plt.xlabel("Time (s)")
-        plt.ylabel("Horizontal Distance (m)")
-        plt.grid(True)
-        plt.figtext(0.15,0.02,f"ΔU = {dU:.2f} J",fontsize=9,color="red")
-        plt.figtext(0.02,0.02,f"ΔK = {d_K:.2f} J",fontsize=9,color="darkred")
+
+        fig, ax = plt.subplots(figsize=(8, 5))
+        fig.subplots_adjust(top=0.80)
+    
+        button_ax = fig.add_axes([0.125, 0.85, 0.2, 0.07])
+        button_ax.set_xticks([])
+        button_ax.set_yticks([])
+        button = Button(button_ax, "Show Equations Used")
+
+        ax.plot(t,x,color="red",linewidth=3)
+        ax.set_title("Projectile Motion: x-t")
+        ax.set_xlabel("Time (s)")
+        ax.set_ylabel("Horizontal Distance (m)")
+        ax.grid(True)
+        fig.text(0.15,0.02,f"ΔU = {dU:.2f} J",fontsize=9,color="red")
+        fig.text(0.02,0.02,f"ΔK = {d_K:.2f} J",fontsize=9,color="darkred")    
+
+        button.on_clicked(lambda event: clicked_motion(event, "proj.png"))
         plt.show()
 
 
     elif diagram == "y-t":
-        plt.figure(figsize=(8, 5))
-        plt.plot(t,y,color="red",linewidth=3)
-        plt.title("Projectile Motion: y-t")
-        plt.xlabel("Time (s)")
-        plt.ylabel("Vertical Distance (m)")
-        plt.grid(True)
-        plt.figtext(0.15,0.02,f"ΔU = {dU:.2f} J",fontsize=9,color="red")
-        plt.figtext(0.02,0.02,f"ΔK = {d_K:.2f} J",fontsize=9,color="darkred")
+        fig, ax = plt.subplots(figsize=(8, 5))
+        fig.subplots_adjust(top=0.80)
+    
+        button_ax = fig.add_axes([0.125, 0.85, 0.2, 0.07])
+        button_ax.set_xticks([])
+        button_ax.set_yticks([])
+        button = Button(button_ax, "Show Equations Used")
+
+        ax.plot(t,y,color="red",linewidth=3)
+        ax.set_title("Projectile Motion: y-t")
+        ax.set_xlabel("Time (s)")
+        ax.set_ylabel("Vertical Distance (m)")
+        ax.grid(True)
+        fig.text(0.15,0.02,f"ΔU = {dU:.2f} J",fontsize=9,color="red")
+        fig.text(0.02,0.02,f"ΔK = {d_K:.2f} J",fontsize=9,color="darkred")    
+
+        button.on_clicked(lambda event: clicked_motion(event, "proj.png"))
         plt.show()
 
     elif diagram == "Kinetic Energy":
-        plt.figure(figsize=(8, 5))
-        plt.plot(t,K,color="red",linewidth=3)
-        plt.title("Projectile Motion: Kinetic Energy")
-        plt.xlabel("Time (s)")
-        plt.ylabel("Kinetic Energy (J)")
-        plt.grid(True)
-        plt.figtext(0.15,0.02,f"ΔU = {dU:.2f} J",fontsize=9,color="red")
-        plt.figtext(0.02,0.02,f"ΔK = {d_K:.2f} J",fontsize=9,color="darkred")
+        fig, ax = plt.subplots(figsize=(8, 5))
+        fig.subplots_adjust(top=0.80)
+
+        button_ax = fig.add_axes([0.125, 0.85, 0.2, 0.07])
+        button_ax.set_xticks([])
+        button_ax.set_yticks([])
+        button = Button(button_ax, "Show Equations Used")
+
+        ax.plot(t,K,color="red",linewidth=3)
+        ax.set_title("Projectile Motion: Kinetic Energy")
+        ax.set_xlabel("Time (s)")
+        ax.set_ylabel("Kinetic Energy (J)")
+        ax.grid(True)
+        fig.text(0.15,0.02,f"ΔU = {dU:.2f} J",fontsize=9,color="red")
+        fig.text(0.02,0.02,f"ΔK = {d_K:.2f} J",fontsize=9,color="darkred")    
+
+        button.on_clicked(clicked_energy)
         plt.show()
 
     elif diagram == "Potential Energy":
-        plt.figure(figsize=(8, 5))
-        plt.plot(t,U,color="red",linewidth=3)
-        plt.title("Projectile Motion: Potential Energy")
-        plt.xlabel("Time (s)")
-        plt.ylabel("Potential Energy (J)")
-        plt.grid(True)
-        plt.figtext(0.15,0.02,f"ΔU = {dU:.2f} J",fontsize=9,color="red")
-        plt.figtext(0.02,0.02,f"ΔK = {d_K:.2f} J",fontsize=9,color="darkred")
+        fig, ax = plt.subplots(figsize=(8, 5))
+        fig.subplots_adjust(top=0.80)
+    
+        button_ax = fig.add_axes([0.125, 0.85, 0.2, 0.07])
+        button_ax.set_xticks([])
+        button_ax.set_yticks([])
+        button = Button(button_ax, "Show Equations Used")
+
+        ax.plot(t,U,color="red",linewidth=3)
+        ax.set_title("Projectile Motion: Potential Energy")
+        ax.set_xlabel("Time (s)")
+        ax.set_ylabel("Potential Energy (J)")
+        ax.grid(True)
+        fig.text(0.15,0.02,f"ΔU = {dU:.2f} J",fontsize=9,color="red")
+        fig.text(0.02,0.02,f"ΔK = {d_K:.2f} J",fontsize=9,color="darkred")    
+
+        button.on_clicked(clicked_energy)
         plt.show()
 
     elif diagram == "x-y":
@@ -323,7 +548,8 @@ def projectile_motion(t, v0, h0, theta,  m, diagram):
 
     return data3
 
-def shm(t, v0, m, A, k, diagram):
+# ------ SHM -------
+def shm(t, v, m, A, k, diagram):
 
     omega = np.sqrt(k/m)
     x = A * np.cos(omega*t)
@@ -332,24 +558,35 @@ def shm(t, v0, m, A, k, diagram):
     K = 0.5 * m * v**2
     U = 0.5 * k * x**2
 
-    data3 = {
-        "Time(s)": t, 
-        "Horizontal Position(m)": x, 
-        "Velocity(m/s)": v0,
-        "Kinetic Energy(J)": K,
-        "Potential Energy(J)": U
+    data4 = {
+        "Time (s)": t, 
+        "Horizontal Position (m)": x, 
+        "Velocity (m/s)": v,
+        "Kinetic Energy (J)": K,
+        "Potential Energy (J)": U
     }
 
-    plt.figure(figsize=(8, 5))
-    plt.plot(t,x,color="red",linewidth=3)
-    plt.title("Simple Harmonic Motion: x-t")
-    plt.xlabel("Time (s)")
-    plt.ylabel("Displacement (m)")
-    plt.grid(True)
-    plt.show()
+    if diagram == "x-t":
+        fig, ax = plt.subplots(figsize=(8, 5))
+        fig.subplots_adjust(top=0.80)
+
+        button_ax = fig.add_axes([0.125, 0.85, 0.2, 0.07])
+        button_ax.set_xticks([])
+        button_ax.set_yticks([])
+        button = Button(button_ax, "Show Equations Used")
+
+        ax.plot(t, x, color="red", linewidth=3)
+        ax.set_title("Simple Harmonic Motion: x-t")
+        ax.set_xlabel("Time (s)")
+        ax.set_ylabel("Displacement (m)")
+        ax.grid(True)
+
+        button.on_clicked(lambda event: clicked_motion(event, "shm.png"))
+        plt.show()
+
+    return data4
     
 # ---------------- MAIN SIMULATION ----------------
-
 def simulate():
 
     global data
@@ -482,9 +719,7 @@ time_label = tk.Label(
 )
 
 time_label.place(x=250,y=140,anchor="center")
-
 time_entry = tk.Entry(window)
-
 time_entry.place(x=250,y=165,anchor="center")
 
 
@@ -496,9 +731,7 @@ velocity_label = tk.Label(
 )
 
 velocity_label.place(x=250,y=205,anchor="center")
-
 velocity_entry = tk.Entry(window)
-
 velocity_entry.place(x=250,y=230,anchor="center")
 
 
@@ -510,9 +743,7 @@ mass_label = tk.Label(
 )
 
 mass_label.place(x=250,y=265,anchor="center")
-
 mass_entry = tk.Entry(window)
-
 mass_entry.place(x=250,y=290,anchor="center")
 
 
@@ -589,53 +820,62 @@ diagram_menu.place(x=250,y=465,anchor="center")
 # ---------------- BUTTON FRAME ----------------
 
 button_frame = tk.Frame(window)
-
 button_frame.place(
     x=250,
-    y=560,
+    y=650,
     anchor="center"
 )
 
-
-# Simulate button
+# First row
+top_buttons = tk.Frame(button_frame)
+top_buttons.pack()
 
 simulate_button = tk.Button(
-    button_frame,
+    top_buttons,
     text="Run Simulation",
-    font=("Arial",13,"bold"),
+    font=("Arial", 13, "bold"),
     bg="lightblue",
     width=12,
     command=simulate
 )
 
-
-# Reset button
-
 reset_button = tk.Button(
-    button_frame,
+    top_buttons,
     text="Reset",
-    font=("Arial",13,"bold"),
+    font=("Arial", 13, "bold"),
     bg="lightblue",
-    width=9,
+    width=12,
     command=reset
+
 )
+simulate_button.pack(side="left", padx=5, pady=5)
+reset_button.pack(side="left", padx=5, pady=5)
 
-
-# Export CSV button
-
+# Second row
+bottom_buttons = tk.Frame(button_frame)
+bottom_buttons.pack()
 export_button = tk.Button(
-    button_frame,
+    bottom_buttons,
     text="Export CSV",
-    font=("Arial",13,"bold"),
+    font=("Arial", 13, "bold"),
     bg="lightblue",
-    width=10,
+    width=12,
     command=export_csv
+
 )
 
+compare_button = tk.Button(
+    bottom_buttons,
+    text="Compare CSV",
+    font=("Arial", 13, "bold"),
+    bg="lightblue",
+    width=12,
+    command=compare_csv
 
-simulate_button.pack(side="left",padx=5)
-reset_button.pack(side="left",padx=5)
-export_button.pack(side="left",padx=5)
+)
+
+export_button.pack(side="left", padx=5, pady=5)
+compare_button.pack(side="left", padx=5, pady=5)
 
 
 # ---------------- START ----------------
