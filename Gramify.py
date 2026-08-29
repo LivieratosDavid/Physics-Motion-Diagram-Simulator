@@ -199,6 +199,21 @@ def compare_csv():
         command=plot_comparison
     ).pack(pady=10)
 
+def save_img(event):
+
+    filename = filedialog.asksaveasfilename(
+            title="Save Image",
+            defaultextension=".png",
+            filetypes=[("PNG files", '*.png')]
+        )
+
+    if not filename:
+        return
+
+    plt.savefig(filename, dpi = 300, bbox_inches='tight')
+
+    messagebox.showinfo("Image Saved", "Your image was saved!")
+
 def reset():
     time_entry.delete(0, tk.END)
     acceleration_entry.delete(0, tk.END)
@@ -223,11 +238,12 @@ def hide_all():
 
 def update_diagrams(*args):
     hide_all()
-
     motion = motion_var.get()
 
     if motion == "Linear Motion":
         diagram_menu["values"] = ["x-t", "v-t"]
+        mass_label.place_forget()
+        mass_entry.place_forget()
 
     elif motion == "Accelerated Motion":
         diagram_menu["values"] = ["x-t", "v-t", "Kinetic Energy"]
@@ -310,10 +326,17 @@ def linear_motion(t, v0, diagram):
     ax.set_ylabel(ylabel)
     ax.grid(True)
 
-    fig.text(0.15, 0.02, f"U = {U} J", fontsize=9, color="red")
-    fig.text(0.02, 0.02, f"ΔK = {dK} J", fontsize=9, color="darkred")
+    img_button_ax = fig.add_axes([0.75, 0.85, 0.15, 0.07])
+    img_button_ax.set_xticks([])
+    img_button_ax.set_yticks([])
+
+    img_button = Button(img_button_ax, "Save Image")
 
     button.on_clicked(lambda event: clicked_motion(event, 'linear.png'))
+    img_button.on_clicked(save_img)
+
+    fig.text(0.15, 0.02, f"U = {U} J", fontsize=9, color="red")
+    fig.text(0.02, 0.02, f"ΔK = {dK} J", fontsize=9, color="darkred")
 
     plt.show()
 
@@ -579,12 +602,6 @@ def shm(t, v, m, A, k, diagram):
         ax.set_title("Simple Harmonic Motion: x-t")
         ax.set_xlabel("Time (s)")
         ax.set_ylabel("Displacement (m)")
-        ax.grid(True)
-
-        button.on_clicked(lambda event: clicked_motion(event, "shm.png"))
-        plt.show()
-
-    return data4
     
 # ---------------- MAIN SIMULATION ----------------
 def simulate():
@@ -604,7 +621,6 @@ def simulate():
         t_max = float(time_entry.get())
         v0 = float(velocity_entry.get())
         diagram = diagram_var.get()
-        m = float(mass_entry.get())
 
         t = np.linspace(0,t_max,100)
 
@@ -618,6 +634,7 @@ def simulate():
         elif motion == "Accelerated Motion":
 
             a = float(acceleration_entry.get())
+            m = float(mass_entry.get())
             data = accelerated_motion(t, v0, m, a, diagram)
 
         # ---------------- PROJECTILE MOTION ----------------
@@ -626,6 +643,7 @@ def simulate():
 
             theta = float(angle_entry.get())
             h0 = float(height_entry.get())
+            m = float(mass_entry.get())
 
             data = projectile_motion(t, v0, h0, theta, m, diagram)
 
@@ -636,6 +654,7 @@ def simulate():
             k = float(k_entry.get())
             A = float(displacement_entry.get())
             omega = np.sqrt(k/m)
+            m = float(mass_entry.get())
 
             data = shm(t, v0, m, A, k, diagram)
 
@@ -761,7 +780,7 @@ acceleration_entry = tk.Entry(window)
 
 angle_label = tk.Label(
     window,
-    text="Launch Angle (degrees):"
+    text="Launch Angle (degrees: 0-89°):"
 )
 
 angle_entry = tk.Entry(window)
