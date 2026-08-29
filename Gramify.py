@@ -244,30 +244,33 @@ def update_diagrams(*args):
         diagram_menu["values"] = ["x-t", "v-t"]
         mass_label.place_forget()
         mass_entry.place_forget()
+    else:
+        mass_label.place(x=250, y=265, anchor="center")
+        mass_entry.place(x=250, y=290, anchor="center")
 
-    elif motion == "Accelerated Motion":
-        diagram_menu["values"] = ["x-t", "v-t", "Kinetic Energy"]
+        if motion == "Accelerated Motion":
+            diagram_menu["values"] = ["x-t", "v-t", "Kinetic Energy"]
 
-        acceleration_label.place(x=250, y=320, anchor="center")
-        acceleration_entry.place(x=250, y=345, anchor="center")
+            acceleration_label.place(x=250, y=320, anchor="center")
+            acceleration_entry.place(x=250, y=345, anchor="center")
 
-    elif motion == "Projectile Motion":
-        diagram_menu["values"] = ["x-t", "y-t", "x-y", "Kinetic Energy", "Potential Energy"]
+        elif motion == "Projectile Motion":
+            diagram_menu["values"] = ["x-t", "y-t", "x-y", "Kinetic Energy", "Potential Energy"]
 
-        angle_label.place(x=250, y=320, anchor="center")
-        angle_entry.place(x=250, y=345, anchor="center")
+            angle_label.place(x=250, y=320, anchor="center")
+            angle_entry.place(x=250, y=345, anchor="center")
 
-        height_label.place(x=250, y=375, anchor="center")
-        height_entry.place(x=250, y=400, anchor="center")
+            height_label.place(x=250, y=375, anchor="center")
+            height_entry.place(x=250, y=400, anchor="center")
 
-    elif motion == "Simple Harmonic Motion":
-        diagram_menu["values"] = ["x-t"]
+        elif motion == "Simple Harmonic Motion":
+            diagram_menu["values"] = ["x-t"]
 
-        k_label.place(x=250, y=320, anchor="center")
-        k_entry.place(x=250, y=345, anchor="center")
+            k_label.place(x=250, y=320, anchor="center")
+            k_entry.place(x=250, y=345, anchor="center")
 
-        displacement_label.place(x=250, y=375, anchor="center")
-        displacement_entry.place(x=250, y=400, anchor="center")
+            displacement_label.place(x=250, y=375, anchor="center")
+            displacement_entry.place(x=250, y=400, anchor="center")
 
     diagram_var.set(diagram_menu["values"][0])
 
@@ -332,8 +335,9 @@ def linear_motion(t, v0, diagram):
 
     img_button = Button(img_button_ax, "Save Image")
 
-    button.on_clicked(lambda event: clicked_motion(event, 'linear.png'))
     img_button.on_clicked(save_img)
+    button.on_clicked(lambda event: clicked_motion(event, 'linear.png'))
+    
 
     fig.text(0.15, 0.02, f"U = {U} J", fontsize=9, color="red")
     fig.text(0.02, 0.02, f"ΔK = {dK} J", fontsize=9, color="darkred")
@@ -377,9 +381,16 @@ def accelerated_motion(t, v0, m, a, diagram):
         ax.set_ylabel("Distance (m)")
         ax.grid(True)
 
+        img_button_ax = fig.add_axes([0.75, 0.85, 0.15, 0.07])
+        img_button_ax.set_xticks([])
+        img_button_ax.set_yticks([])
+
+        img_button = Button(img_button_ax, "Save Image")
+
         fig.text(0.15, 0.02, f"U = {U} J", fontsize=9, color="red")
         fig.text(0.02, 0.02, f"ΔK = {d_K:.2f} J", fontsize=9, color="darkred")
 
+        img_button.on_clicked(save_img)
         button.on_clicked(lambda event: clicked_motion(event, "acc.png"))
         plt.show()
 
@@ -399,9 +410,16 @@ def accelerated_motion(t, v0, m, a, diagram):
         ax.set_ylabel("Velocity (m/s)")
         ax.grid(True)
 
+        img_button_ax = fig.add_axes([0.75, 0.85, 0.15, 0.07])
+        img_button_ax.set_xticks([])
+        img_button_ax.set_yticks([])
+        
+        img_button = Button(img_button_ax, "Save Image")
+        
         fig.text(0.15, 0.02, f"U = {U} J", fontsize=9, color="red")
         fig.text(0.02, 0.02, f"ΔK = {d_K:.2f} J", fontsize=9, color="darkred")
 
+        img_button.on_clicked(save_img)
         button.on_clicked(lambda event: clicked_motion(event, "acc.png"))
         plt.show()
 
@@ -421,9 +439,17 @@ def accelerated_motion(t, v0, m, a, diagram):
         ax.set_ylabel("Kinetic Energy (J)")
         ax.grid(True)
 
+        img_button_ax = fig.add_axes([0.75, 0.85, 0.15, 0.07])
+        img_button_ax.set_xticks([])
+        img_button_ax.set_yticks([])
+        
+        img_button = Button(img_button_ax, "Save Image")
+
+        
         fig.text(0.15, 0.02, f"U = {U} J", fontsize=9, color="red")
         fig.text(0.02, 0.02, f"ΔK = {d_K:.2f} J", fontsize=9, color="darkred")
 
+        img_button.on_clicked(save_img)
         button.on_clicked(clicked_energy)
         plt.show()
 
@@ -492,9 +518,17 @@ def projectile_motion(t, v0, h0, theta,  m, diagram):
         ax.set_ylabel("Horizontal Distance (m)")
         ax.grid(True)
         fig.text(0.15,0.02,f"ΔU = {dU:.2f} J",fontsize=9,color="red")
-        fig.text(0.02,0.02,f"ΔK = {d_K:.2f} J",fontsize=9,color="darkred")    
+        fig.text(0.02,0.02,f"ΔK = {d_K:.2f} J",fontsize=9,color="darkred") 
 
+        img_button_ax = fig.add_axes([0.75, 0.85, 0.15, 0.07])
+        img_button_ax.set_xticks([])
+        img_button_ax.set_yticks([])
+
+        img_button = Button(img_button_ax, "Save Image")
+
+        img_button.on_clicked(save_img)   
         button.on_clicked(lambda event: clicked_motion(event, "proj.png"))
+
         plt.show()
 
 
@@ -512,6 +546,15 @@ def projectile_motion(t, v0, h0, theta,  m, diagram):
         ax.set_xlabel("Time (s)")
         ax.set_ylabel("Vertical Distance (m)")
         ax.grid(True)
+
+        img_button_ax = fig.add_axes([0.75, 0.85, 0.15, 0.07])
+        img_button_ax.set_xticks([])
+        img_button_ax.set_yticks([])
+
+        img_button = Button(img_button_ax, "Save Image")
+
+        img_button.on_clicked(save_img)
+
         fig.text(0.15,0.02,f"ΔU = {dU:.2f} J",fontsize=9,color="red")
         fig.text(0.02,0.02,f"ΔK = {d_K:.2f} J",fontsize=9,color="darkred")    
 
@@ -532,6 +575,15 @@ def projectile_motion(t, v0, h0, theta,  m, diagram):
         ax.set_xlabel("Time (s)")
         ax.set_ylabel("Kinetic Energy (J)")
         ax.grid(True)
+
+        img_button_ax = fig.add_axes([0.75, 0.85, 0.15, 0.07])
+        img_button_ax.set_xticks([])
+        img_button_ax.set_yticks([])
+
+        img_button = Button(img_button_ax, "Save Image")
+
+        img_button.on_clicked(save_img)
+
         fig.text(0.15,0.02,f"ΔU = {dU:.2f} J",fontsize=9,color="red")
         fig.text(0.02,0.02,f"ΔK = {d_K:.2f} J",fontsize=9,color="darkred")    
 
@@ -552,6 +604,15 @@ def projectile_motion(t, v0, h0, theta,  m, diagram):
         ax.set_xlabel("Time (s)")
         ax.set_ylabel("Potential Energy (J)")
         ax.grid(True)
+
+        img_button_ax = fig.add_axes([0.75, 0.85, 0.15, 0.07])
+        img_button_ax.set_xticks([])
+        img_button_ax.set_yticks([])
+
+        img_button = Button(img_button_ax, "Save Image")
+
+        img_button.on_clicked(save_img)
+        
         fig.text(0.15,0.02,f"ΔU = {dU:.2f} J",fontsize=9,color="red")
         fig.text(0.02,0.02,f"ΔK = {d_K:.2f} J",fontsize=9,color="darkred")    
 
@@ -559,14 +620,31 @@ def projectile_motion(t, v0, h0, theta,  m, diagram):
         plt.show()
 
     elif diagram == "x-y":
-        plt.figure(figsize=(8, 5))
-        plt.plot(x,y,color="red",linewidth=3)
-        plt.title("Projectile Trajectory (x-y)")
-        plt.xlabel("Horizontal Distance (m)")
-        plt.ylabel("Vertical Distance (m)")
-        plt.grid(True)
-        plt.figtext(0.15,0.02,f"ΔU = {dU:.2f} J",fontsize=9,color="red")
-        plt.figtext(0.02,0.02,f"ΔK = {d_K:.2f} J",fontsize=9,color="darkred")
+        fig, ax = plt.subplots(figsize=(8, 5))
+        fig.subplots_adjust(top=0.80)
+
+        button_ax = fig.add_axes([0.125, 0.85, 0.2, 0.07])
+        button_ax.set_xticks([])
+        button_ax.set_yticks([])
+        button = Button(button_ax, "Show Equations Used")
+
+        img_button_ax = fig.add_axes([0.75, 0.85, 0.15, 0.07])
+        img_button_ax.set_xticks([])
+        img_button_ax.set_yticks([])
+        img_button = Button(img_button_ax, "Save Image")
+
+        ax.plot(x, y, color="red", linewidth=3)
+        ax.set_title("Projectile Trajectory (x-y)")
+        ax.set_xlabel("Horizontal Distance (m)")
+        ax.set_ylabel("Vertical Distance (m)")
+        ax.grid(True)
+
+        fig.text(0.15, 0.02, f"ΔU = {dU:.2f} J", fontsize=9, color="red")
+        fig.text(0.02, 0.02, f"ΔK = {d_K:.2f} J", fontsize=9, color="darkred")
+
+        img_button.on_clicked(save_img)
+        button.on_clicked(lambda event: clicked_motion(event, photo="proj.png"))
+
         plt.show()
 
     return data3
@@ -598,11 +676,23 @@ def shm(t, v, m, A, k, diagram):
         button_ax.set_yticks([])
         button = Button(button_ax, "Show Equations Used")
 
+        img_button_ax = fig.add_axes([0.75, 0.85, 0.15, 0.07])
+        img_button_ax.set_xticks([])
+        img_button_ax.set_yticks([])
+
+        img_button = Button(img_button_ax, "Save Image")
+
+        img_button.on_clicked(save_img)
+        button.on_clicked(lambda event: clicked_motion(event, photo="shm.png"))
+
         ax.plot(t, x, color="red", linewidth=3)
         ax.set_title("Simple Harmonic Motion: x-t")
         ax.set_xlabel("Time (s)")
         ax.set_ylabel("Displacement (m)")
-    
+
+        plt.show()
+
+    return data4
 # ---------------- MAIN SIMULATION ----------------
 def simulate():
 
@@ -624,45 +714,63 @@ def simulate():
 
         t = np.linspace(0,t_max,100)
 
+        if t_max <= 0: 
+            messagebox.showerror("Syntax Error","Time cannot be >= 0")
+
+        else:
         # ---------------- LINEAR MOTION ----------------
 
-        if motion == "Linear Motion":
-            data = linear_motion(t, v0, diagram)
+            if motion == "Linear Motion":
+                data = linear_motion(t, v0, diagram)
 
-        # ---------------- ACCELERATED MOTION ----------------
+            # ---------------- ACCELERATED MOTION ----------------
 
-        elif motion == "Accelerated Motion":
+            elif motion == "Accelerated Motion":
 
-            a = float(acceleration_entry.get())
-            m = float(mass_entry.get())
-            data = accelerated_motion(t, v0, m, a, diagram)
+                a = float(acceleration_entry.get())
+                m = float(mass_entry.get())
 
-        # ---------------- PROJECTILE MOTION ----------------
+                if m <= 0: 
+                    messagebox.showerror("Syntax Error", "Mass cannot be >= 0")
+                    return
 
-        elif motion == "Projectile Motion":
+                data = accelerated_motion(t, v0, m, a, diagram)
 
-            theta = float(angle_entry.get())
-            h0 = float(height_entry.get())
-            m = float(mass_entry.get())
+            # ---------------- PROJECTILE MOTION ----------------
 
-            data = projectile_motion(t, v0, h0, theta, m, diagram)
+            elif motion == "Projectile Motion":
 
-        # ---------------- SIMPLE HARMONIC MOTION ----------------
+                theta = float(angle_entry.get())
+                h0 = float(height_entry.get())
+                m = float(mass_entry.get())
 
-        elif motion == "Simple Harmonic Motion":
+                if m <= 0: 
+                    messagebox.showerror("Syntax Error", "Mass cannot be >= 0")
+                    return
+                if 0 >= theta <= 90:
+                    messagebox.showerror("Syntax Error", "Angle must be 0-89 degrees")
+                    return
+                data = projectile_motion(t, v0, h0, theta, m, diagram)
 
-            k = float(k_entry.get())
-            A = float(displacement_entry.get())
-            omega = np.sqrt(k/m)
-            m = float(mass_entry.get())
+            # ---------------- SIMPLE HARMONIC MOTION ----------------
 
-            data = shm(t, v0, m, A, k, diagram)
+            elif motion == "Simple Harmonic Motion":
+
+                k = float(k_entry.get())
+                A = float(displacement_entry.get())
+                m = float(mass_entry.get())
+
+                if m <= 0: 
+                    messagebox.showerror("Syntax Error", "Mass cannot be >= 0")
+                    return
+                if k <= 0:
+                    messagebox.showerror("Syntax Error", "Spring constant cannot be <= 0")
+                data = shm(t, v0, m, A, k, diagram)
 
             
 
     except ValueError:
         messagebox.showerror("Error","Please enter valid numbers.")
-
 
 # ---------------- ORBIT ----------------
 
@@ -755,7 +863,6 @@ velocity_entry.place(x=250,y=230,anchor="center")
 
 
 # Mass
-
 mass_label = tk.Label(
     window,
     text="Mass (kg):"
