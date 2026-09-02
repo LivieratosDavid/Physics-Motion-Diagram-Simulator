@@ -750,6 +750,7 @@ def simulate():
                 if 0 >= theta <= 90:
                     messagebox.showerror("Syntax Error", "Angle must be 0-89 degrees")
                     return
+
                 data = projectile_motion(t, v0, h0, theta, m, diagram)
 
             # ---------------- SIMPLE HARMONIC MOTION ----------------
